@@ -1,0 +1,8 @@
+ul > li {
+    margin: 15px 0px;
+    list-style-type: none;
+}
+
+ul > li:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.1)
+}
