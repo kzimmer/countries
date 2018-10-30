@@ -10,7 +10,7 @@ function CountryEntry(props) {
                     className="text-entry"
                     type="text"
                     placeholder="Country name"
-                    value={this.props.countryName}
+                    value={this.props.enteredCountryName}
                     onChange={this.handleTextInputChange}
                 />
             </form>

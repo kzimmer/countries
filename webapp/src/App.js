@@ -9,69 +9,61 @@ class App extends Component {
         super(props);
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleDelete = this.handleDelete.bind(this);
-        this.state = {countries: [], countryName: ''};
+        this.handleShowReport = this.handleShowReport.bind(this);
+        this.state = {
+            countries: [],
+            reportCountries: [],
+            enteredCountryName: ''
+        };
     }
 
     handleChange(event) {
-        this.setState({countryName: event.target.value});
+        this.setState({enteredCountryName: event.target.value});
     }
 
     handleSubmit(event) {
-        const countryEntered = this.state.countryName;
-        alert(countryEntered);
         event.preventDefault();
+        const aidii = Date.now();
+        const countryEntered = this.state.enteredCountryName;
 
         axios
             .post("http://127.0.0.1:8080/country/" + countryEntered)
-            .then(response => {
-                const countryReceived = response.data.map(c => {
-                    return {
-                        id: c.name,
-                        name: c.name,
-                        capital: c.capital,
-                        population: c.population
-                    };
-                });
-                const newState = Object.assign({}, this.state, {
-                    countries: countryReceived
-                });
-                this.setState(newState);
-                console.log("state", this.state.countries);
-            })
-            .catch(error => console.log(error));
+            .then((response) => {
+                    console.log(response.statusText + "; " + response.status);
 
+                    let countryReceived = response.data;
+                    countryReceived.id = aidii;
+                    let json = JSON.stringify(countryReceived, undefined, 2);
+                    console.log("Received country object so far: " + json);
+
+                    this.setState((prevState) => ({
+                        countries: prevState.countries.concat(countryReceived),
+                        enteredCountryName: ""
+                    }))
+                    // const newState = Object.assign({}, this.state, {
+                    //     countries: countryReceived
+                    // });
+                    // this.setState(newState);
+                }
+            )
+            .catch(error => {
+                    console.log(error);
+                    alert("HTTP POST error while getting data for " + countryEntered
+                    )
+                }
+            )
     }
 
     handleDelete(id) {
+        const countryName = this.state.countries.find(country => country.id === id).name;
+        console.log("Deleting " + countryName);
         this.setState(prevState => ({
-            countries: prevState.countries.filter(el => el != id)
+            countries: prevState.countries.filter(country => country.id !== id)
         }));
-    }
-
-    componentDidMount() {
         axios
-            .get("http://127.0.0.1:8080/countries/")
-            .then(response => {
-                const countriesReceived = response.data.map(c => {
-                    return {
-                        id: c.alpha3Code,
-                        name: c.name,
-                        capital: c.capital,
-                        population: c.population
-                    };
-                });
-
-                // create a new "State" object without mutating the original State object.
-                const newState = Object.assign({}, this.state, {
-                    countries: countriesReceived
-                });
-
-                // store the new state object in the component's state
-                this.setState(newState);
-                console.log("state", this.state.countries);
-            })
+            .delete("http://127.0.0.1:8080/country/" + countryName)
             .catch(error => console.log(error));
+
     }
 
     render() {
@@ -80,38 +72,79 @@ class App extends Component {
                 <header className="App-header">
                     <img src={logo} className="App-logo" alt="logo"/>
                 </header>
-
                 <h1>Countries</h1>
-
-                <form onSubmit={this.handleSubmit}>
-                    <input type="text" value={this.state.countryName} onChange={this.handleChange}/>
-                    <input type="submit" value="Submit"/>
-                </form>
-
-                <CountryList countries={this.state.countries} handleDelete={this.handleDelete}/>
-                {/*<button onClick={this.handleAddRow}>-</button>*/}
-
+                <CountryList countries={this.state.countries} handleDelete={this.handleDelete.bind(this)}/>
+                <div>
+                    <form onSubmit={this.handleSubmit}>
+                        <input onChange={this.handleChange} value={this.state.enteredCountryName}/>
+                        <button>+</button>
+                    </form>
+                </div>
+                <button onClick={this.handleShowReport}>Page 2</button>
+                <button onClick={this.handleClearTable.bind(this)}>Clear table</button>
             </div>
         );
     }
 
+    handleShowReport() {
+        // alert("This is your report placeholder");
+        axios
+            .get("http://127.0.0.1:8080/countries/")
+            .then((response) => {
+                const countriesReceived = response.data.map(c => {
+                    console.log("Capital is " + c.capital);
+                    return {
+                        id: c.alpha3Code,
+                        name: c.name,
+                        capital: c.capital,
+                        population: c.population
+                    };
+                });
+                this.setState({
+                    reportCountries: countriesReceived
+                })
+
+                // const newState = Object.assign({}, this.state, {
+                //     reportCountries: countriesReceived
+                // });
+                // this.setState(newState);
+
+            })
+            .catch(error => console.log(error));
+    }
+
+    handleClearTable() {
+        alert("Cleaning up my closet...");
+        this.setState(() => ({
+            countries: [],
+            reportCountries: [],
+            enteredCountryName: ''
+        }));
+    }
 }
 
-class CountryList extends React.Component {
+class CountryList
+    extends React
+        .Component {
 
-    handleDelete(id) {
+    _handleDelete(id) {
         this.props.handleDelete(id);
     }
 
     render() {
         return (
-            <ul>
-                {this.props.countries.map(c => (
-                    <li key={c.id}>{c.name}
-                        <button onClick={this.handleDelete.bind(this, c.id)}>-</button>
-                    </li>
+            <table>
+                <tbody>
+                {this.props.countries.map(country => (
+                    <tr key={country.id}>
+                        <td>{country.name}</td>
+                        <td>
+                            <button onClick={this._handleDelete.bind(this, country.id)}>-</button>
+                        </td>
+                    </tr>
                 ))}
-            </ul>
+                </tbody>
+            </table>
         );
     }
 }
