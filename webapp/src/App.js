@@ -17,33 +17,47 @@ class App extends Component {
         };
     }
 
+    componentDidMount() {
+        axios
+            .get("http://127.0.0.1:8080/countries/")
+            .then((response) => {
+                const countriesReceived = response.data.map(c => {
+                    console.log("Capital is " + c.capital);
+                    return {
+                        id: Date.now(),
+                        name: c.name,
+                        capital: c.capital,
+                        population: c.population
+                    };
+                });
+                this.setState({
+                    countries: countriesReceived
+                })
+            })
+            .catch(error => console.log(error));
+    }
+
     handleChange(event) {
         this.setState({enteredCountryName: event.target.value});
     }
 
     handleSubmit(event) {
         event.preventDefault();
-        const aidii = Date.now();
         const countryEntered = this.state.enteredCountryName;
 
         axios
             .post("http://127.0.0.1:8080/country/" + countryEntered)
             .then((response) => {
-                    console.log(response.statusText + "; " + response.status);
+                    console.log(response.status + " " + response.statusText);
 
                     let countryReceived = response.data;
-                    countryReceived.id = aidii;
-                    let json = JSON.stringify(countryReceived, undefined, 2);
-                    console.log("Received country object so far: " + json);
+                    countryReceived.id = Date.now();
+                    console.log("Received country object: " + JSON.stringify(countryReceived, undefined, 2));
 
                     this.setState((prevState) => ({
                         countries: prevState.countries.concat(countryReceived),
                         enteredCountryName: ""
                     }))
-                    // const newState = Object.assign({}, this.state, {
-                    //     countries: countryReceived
-                    // });
-                    // this.setState(newState);
                 }
             )
             .catch(error => {
@@ -87,7 +101,6 @@ class App extends Component {
     }
 
     handleShowReport() {
-        // alert("This is your report placeholder");
         axios
             .get("http://127.0.0.1:8080/countries/")
             .then((response) => {
@@ -103,23 +116,19 @@ class App extends Component {
                 this.setState({
                     reportCountries: countriesReceived
                 })
-
-                // const newState = Object.assign({}, this.state, {
-                //     reportCountries: countriesReceived
-                // });
-                // this.setState(newState);
-
             })
             .catch(error => console.log(error));
     }
 
     handleClearTable() {
-        alert("Cleaning up my closet...");
         this.setState(() => ({
             countries: [],
             reportCountries: [],
             enteredCountryName: ''
         }));
+        axios
+            .delete("http://127.0.0.1:8080/countries/")
+            .catch(error => console.log((error)));
     }
 }
 

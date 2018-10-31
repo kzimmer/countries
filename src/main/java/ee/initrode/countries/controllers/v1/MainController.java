@@ -33,7 +33,6 @@ public class MainController {
         return "This page is intentionally left blank";
     }
 
-
     /**
      * Easter egg / testing tool
      * Get RestCountry list straight thru backend from external RestCountries API service
@@ -91,7 +90,6 @@ public class MainController {
         return countryService.fluxCountries();
     }
 
-
     /**
      * Delete all RestCountry entities from model/repository
      *
@@ -110,4 +108,7 @@ public class MainController {
     public Mono<CountryDoc> downloadCountries() {
         return Mono.just(new CountryDoc(countryService.fluxCountries()));
     }
+
+    @GetMapping(value = "/xml/", produces = MediaType.APPLICATION_XML_VALUE)
+    public Flux<Country> xmlCountries(){ return countryService.fluxCountries();}
 }
